@@ -51,7 +51,28 @@ echo [*] Extrayendo conexiones de red activas...
 netstat -anob > "%folder%\01_conexiones_red.txt"
 
 echo [*] Extrayendo historial de resolucion DNS...
-ipconfig /displaydns > "%folder%\02_cache_dns.txt"
+:: Se extrae la cache DNS redirigiendo tanto el resultado como posibles errores al archivo
+ipconfig /displaydns > "%folder%\02_cache_dns.txt" 2>&1
+
+:: Validacion de contenido: Busca si hay registros validos (compatible con Windows en Ingles y Espanol)
+findstr /I /C:"Record Name" /C:"Nombre de registro" "%folder%\02_cache_dns.txt" >nul
+if %errorlevel% neq 0 (
+    echo ===================================================================== > "%folder%\02_cache_dns_temp.txt"
+    echo  [!] AVISO FORENSE: CACHE DNS NO DISPONIBLE O VACIA >> "%folder%\02_cache_dns_temp.txt"
+    echo ===================================================================== >> "%folder%\02_cache_dns_temp.txt"
+    echo. >> "%folder%\02_cache_dns_temp.txt"
+    echo El sistema no devolvio registros validos de resolucion de nombres. >> "%folder%\02_cache_dns_temp.txt"
+    echo. >> "%folder%\02_cache_dns_temp.txt"
+    echo Posibles razones: >> "%folder%\02_cache_dns_temp.txt"
+    echo 1. El servicio 'Cliente DNS' esta apagado intencionalmente por un malware. >> "%folder%\02_cache_dns_temp.txt"
+    echo 2. El servicio esta deshabilitado de fabrica - comun en Windows Lite o MiniOS. >> "%folder%\02_cache_dns_temp.txt"
+    echo 3. La cache de red fue vaciada por el atacante recientemente. >> "%folder%\02_cache_dns_temp.txt"
+    echo 4. El equipo no ha navegado desde su ultimo reinicio. >> "%folder%\02_cache_dns_temp.txt"
+    echo. >> "%folder%\02_cache_dns_temp.txt"
+    echo --- MENSAJE ORIGINAL DEL SISTEMA --- >> "%folder%\02_cache_dns_temp.txt"
+    type "%folder%\02_cache_dns.txt" >> "%folder%\02_cache_dns_temp.txt"
+    move /y "%folder%\02_cache_dns_temp.txt" "%folder%\02_cache_dns.txt" >nul
+)
 
 echo [*] Extrayendo procesos en memoria RAM y lineas de comandos...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_Process | Select-Object Name, ProcessId, ParentProcessId, CommandLine | Export-Csv -Path '%folder%\03_procesos_memoria.csv' -NoTypeInformation -Encoding UTF8"
