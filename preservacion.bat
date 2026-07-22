@@ -54,7 +54,7 @@ echo [*] Extrayendo historial de resolucion DNS...
 :: Se extrae la cache DNS redirigiendo tanto el resultado como posibles errores al archivo
 ipconfig /displaydns > "%folder%\02_cache_dns.txt" 2>&1
 
-:: Validacion de contenido: Busca si hay registros validos (compatible con Windows en Ingles y Espanol)
+:: Validacion de contenido: Busca si hay registros validos
 findstr /I /C:"Record Name" /C:"Nombre de registro" "%folder%\02_cache_dns.txt" >nul
 if %errorlevel% neq 0 (
     echo ===================================================================== > "%folder%\02_cache_dns_temp.txt"
